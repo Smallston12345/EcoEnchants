@@ -37,6 +37,14 @@ object EnchantingTableSupport : Listener {
         val cost = event.expLevelCost
         val toAdd = event.enchantsToAdd
 
+        // EcoEnchants handles its own enchanting-table rolls below. Remove any
+        // Eco enchantments that were already supplied by vanilla, Paper, or
+        // another plugin so they cannot bypass enchantable, permissions, rarity,
+        // or the global enchanting-table setting.
+        toAdd.keys.removeIf { enchantment ->
+            EcoEnchants.getByID(enchantment.key.key) != null
+        }
+
         if (!plugin.configYml.getBool("enchanting-table.enabled")) {
             return
         }

@@ -34,7 +34,7 @@ object EnchantFinder : ItemHolderFinder<EcoEnchantLevel>() {
     }
 
     override fun isValidInSlot(holder: EcoEnchantLevel, slot: SlotType): Boolean {
-        return holder.enchant.targets.map { it.slot }.any { it.isOrContains(slot) }
+        return holder.enchant.targets.any { it.slot.isOrContains(slot) }
     }
 
     internal fun LivingEntity.clearEnchantmentCache() = levelCache.invalidate(this.uniqueId)
@@ -43,7 +43,7 @@ object EnchantFinder : ItemHolderFinder<EcoEnchantLevel>() {
         get() = levelCache.get(this.uniqueId) {
             toHolderProvider().provide(this.toDispatcher())
                 .mapNotNull {
-                    val level = it.holder as? EcoEnchantLevel ?: return@mapNotNull null
+                    val level = it.holder
                     val item = it.provider as? ItemStack ?: return@mapNotNull null
 
                     ProvidedLevel(level, item, it)
@@ -51,16 +51,42 @@ object EnchantFinder : ItemHolderFinder<EcoEnchantLevel>() {
         }
 
     fun LivingEntity.hasEnchantActive(enchant: EcoEnchant): Boolean {
-        return this.cachedLevels
-            .filter { it.level.enchant == enchant }
-            .any { it.level.conditions.areMet(this.toDispatcher(), it.holder) }
+        val levels = this.cachedLevels
+
+        if (levels.none { it.level.enchant == enchant }) {
+            return false
+        }
+
+        val dispatcher = this.toDispatcher()
+
+        return levels.any {
+            it.level.enchant == enchant &&
+                it.level.conditions.areMet(dispatcher, it.holder)
+        }
     }
 
     fun LivingEntity.getItemsWithEnchantActive(enchant: EcoEnchant): Map<ItemStack, Int> {
-        return this.cachedLevels
-            .filter { it.level.enchant == enchant }
-            .filter { it.level.conditions.areMet(this.toDispatcher(), it.holder) }
-            .associate { it.item to it.level.level }
+        val levels = this.cachedLevels
+
+        if (levels.none { it.level.enchant == enchant }) {
+            return emptyMap()
+        }
+
+        val dispatcher = this.toDispatcher()
+
+        return buildMap {
+            for (provided in levels) {
+                if (provided.level.enchant != enchant) {
+                    continue
+                }
+
+                if (!provided.level.conditions.areMet(dispatcher, provided.holder)) {
+                    continue
+                }
+
+                put(provided.item, provided.level.level)
+            }
+        }
     }
 
     private data class ProvidedLevel(

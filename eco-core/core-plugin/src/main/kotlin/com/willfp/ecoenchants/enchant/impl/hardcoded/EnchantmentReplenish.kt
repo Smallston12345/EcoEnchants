@@ -17,6 +17,15 @@ import org.bukkit.inventory.ItemStack
 object EnchantmentReplenish : HardcodedEcoEnchant(
     "replenish"
 ) {
+    private val ignoredMaterials = setOf(
+        Material.GLOW_BERRIES,
+        Material.SWEET_BERRY_BUSH,
+        Material.CACTUS,
+        Material.BAMBOO,
+        Material.CHORUS_FLOWER,
+        Material.SUGAR_CANE
+    )
+
     private var handler = ReplenishHandler(this)
 
     override fun onRegister() {
@@ -34,30 +43,22 @@ object EnchantmentReplenish : HardcodedEcoEnchant(
             ignoreCancelled = true
         )
         fun handle(event: BlockBreakEvent) {
-            val player = event.player
-
-            if (!player.hasEnchantActive(enchant)) {
-                return
-            }
-
             val block = event.block
             val type = block.type
 
-            if (type in arrayOf(
-                    Material.GLOW_BERRIES,
-                    Material.SWEET_BERRY_BUSH,
-                    Material.CACTUS,
-                    Material.BAMBOO,
-                    Material.CHORUS_FLOWER,
-                    Material.SUGAR_CANE
-                )
-            ) {
+            if (type in ignoredMaterials) {
                 return
             }
 
             val data = block.blockData
 
             if (data !is Ageable) {
+                return
+            }
+
+            val player = event.player
+
+            if (!player.hasEnchantActive(enchant)) {
                 return
             }
 
