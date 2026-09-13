@@ -19,6 +19,8 @@ effects:
       amount: "%level%"
       check-hardness: true
       disable-on-sneak: true
+      prevent-trigger: keep_events
+      max-blocks: 64
     triggers:
       - mine_block
 

@@ -78,7 +78,7 @@ class EcoEnchantsPlugin : LibreforgePlugin() {
     override fun handleEnable() {
         Effects.register(EffectApplyRandomEnchant)
 
-        registerHolderProvider(EnchantFinder.toHolderProvider())
+        registerHolderProvider(EnchantFinder.toActiveHolderProvider())
 
         registerSpecificRefreshFunction<LivingEntity> {
             it.clearEnchantmentCache()

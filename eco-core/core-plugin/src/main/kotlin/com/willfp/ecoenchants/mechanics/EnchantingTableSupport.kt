@@ -14,6 +14,7 @@ import org.bukkit.Material
 import org.bukkit.enchantments.Enchantment
 import org.bukkit.enchantments.EnchantmentOffer
 import org.bukkit.event.EventHandler
+import org.bukkit.event.EventPriority
 import org.bukkit.event.Listener
 import org.bukkit.event.enchantment.EnchantItemEvent
 import org.bukkit.event.enchantment.PrepareItemEnchantEvent
@@ -30,9 +31,25 @@ object EnchantingTableSupport : Listener {
         ExtraItemSupport.currentlyEnchantingExtraItem.remove(event.player.uniqueId)
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     fun onEnchant(event: EnchantItemEvent) {
         val player = event.enchanter
+
+        // Slimefun's Magician Talisman mutates plain books directly instead of
+        // adding the enchantment to enchantsToAdd. Remove those Eco enchantments
+        // before processing the table roll so disabled enchants cannot bypass us.
+        if (event.item.type == Material.BOOK) {
+            val meta = event.item.itemMeta
+            val ecoEnchantments = meta.enchants.keys.filter { enchantment ->
+                EcoEnchants.getByID(enchantment.key.key) != null
+            }
+
+            if (ecoEnchantments.isNotEmpty()) {
+                ecoEnchantments.forEach(meta::removeEnchant)
+                event.item.itemMeta = meta
+            }
+        }
+
         val item = event.item.clone()
         val cost = event.expLevelCost
         val toAdd = event.enchantsToAdd

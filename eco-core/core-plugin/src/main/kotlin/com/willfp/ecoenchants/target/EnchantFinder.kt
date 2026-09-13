@@ -4,19 +4,46 @@ import com.willfp.eco.core.cache.EcoCache
 import com.willfp.eco.core.fast.fast
 import com.willfp.ecoenchants.enchant.EcoEnchant
 import com.willfp.ecoenchants.enchant.EcoEnchantLevel
+import com.willfp.libreforge.Dispatcher
 import com.willfp.libreforge.ProvidedHolder
+import com.willfp.libreforge.TypedHolderProvider
+import com.willfp.libreforge.TypedProvidedHolder
 import com.willfp.libreforge.slot.ItemHolderFinder
+import com.willfp.libreforge.slot.SlotItemProvidedHolder
 import com.willfp.libreforge.slot.SlotType
+import com.willfp.libreforge.slot.impl.NumericSlotType
+import com.willfp.libreforge.slot.impl.SlotTypeAny
 import com.willfp.libreforge.toDispatcher
 import org.bukkit.entity.LivingEntity
 import org.bukkit.inventory.ItemStack
-import java.util.UUID
 import java.time.Duration
+import java.util.UUID
 
 object EnchantFinder : ItemHolderFinder<EcoEnchantLevel>() {
     private val levelCache = EcoCache.builder<UUID, List<ProvidedLevel>>()
         .expireAfterWrite(Duration.ofSeconds(1))
         .build()
+
+    private val activeProvider = object : TypedHolderProvider<EcoEnchantLevel> {
+        override fun provide(dispatcher: Dispatcher<*>): Collection<TypedProvidedHolder<EcoEnchantLevel>> {
+            return toHolderProvider().provide(dispatcher).filter { provided ->
+                val slot = (provided as? SlotItemProvidedHolder<*>)?.slotType
+                    ?: return@filter true
+
+                if (slot !is NumericSlotType) {
+                    return@filter true
+                }
+
+                // `any` is needed by item-management enchantments such as Soulbound
+                // and Repairing, but ordinary effects must not activate from items
+                // sitting unused in the player's inventory. Explicit numeric or
+                // combined numeric targets remain supported as an opt-in.
+                provided.holder.enchant.targets.any { target ->
+                    target.slot !== SlotTypeAny && target.slot.isOrContains(slot)
+                }
+            }
+        }
+    }
 
     override fun find(item: ItemStack): List<EcoEnchantLevel> {
         val enchantMap = item.fast().enchants
@@ -35,6 +62,10 @@ object EnchantFinder : ItemHolderFinder<EcoEnchantLevel>() {
 
     override fun isValidInSlot(holder: EcoEnchantLevel, slot: SlotType): Boolean {
         return holder.enchant.targets.any { it.slot.isOrContains(slot) }
+    }
+
+    fun toActiveHolderProvider(): TypedHolderProvider<EcoEnchantLevel> {
+        return activeProvider
     }
 
     internal fun LivingEntity.clearEnchantmentCache() = levelCache.invalidate(this.uniqueId)

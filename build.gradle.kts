@@ -94,6 +94,18 @@ allprojects {
     apply(plugin = "com.gradleup.shadow")
 
     repositories {
+        exclusiveContent {
+            forRepository {
+                flatDir {
+                    name = "patchedLibreforge"
+                    dirs(rootProject.layout.projectDirectory.dir("lib"))
+                }
+            }
+            filter {
+                includeModule("com.willfp", "libreforge")
+            }
+        }
+
         mavenLocal()
         mavenCentral()
 
