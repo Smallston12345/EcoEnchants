@@ -34,7 +34,8 @@ object TriggerMineBlock : Trigger("mine_block") {
         val player = event.player
         val block = event.block
 
-        // Extra Drill blocks still fire Bukkit events, but must not dispatch the full mine_block chain.
+        // Broken by a mine effect with prevent_trigger: keep_events, so the events fire as normal
+        // but the block shouldn't re-run the effect chain that broke it.
         if (block.hasMetadata(MineBlockEffect.preventTriggerKey)) {
             return
         }

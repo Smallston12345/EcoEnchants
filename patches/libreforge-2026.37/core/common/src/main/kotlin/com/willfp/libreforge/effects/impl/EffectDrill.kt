@@ -10,6 +10,7 @@ import com.willfp.libreforge.ViolationContext
 import com.willfp.libreforge.arguments
 import com.willfp.libreforge.effects.templates.MineBlockEffect
 import com.willfp.libreforge.effects.templates.PreventTriggerMode
+import com.willfp.libreforge.getFormattedStrings
 import com.willfp.libreforge.getIntFromExpression
 import com.willfp.libreforge.triggers.TriggerData
 import com.willfp.libreforge.triggers.TriggerParameter
@@ -19,7 +20,6 @@ private const val DEFAULT_MAX_BLOCKS = 64
 
 data class DrillCompileData(
     val whitelist: List<TestableBlock>?,
-    val blacklist: List<TestableBlock>,
     val checkHardness: Boolean,
     val disableOnSneak: Boolean,
     val preventTriggers: PreventTriggerMode,
@@ -100,6 +100,8 @@ object EffectDrill : MineBlockEffect<DrillCompileData>("drill") {
             return false
         }
 
+        // Since 2026.37 this argument supports trigger placeholders, so it must remain dynamic.
+        val blacklist = config.getFormattedStrings("blacklisted_blocks", data).map { Blocks.lookup(it) }
         val blocks = mutableSetOf<Block>()
         val forwardAxis = resolveForwardAxis(config, player, block)
         val stepX = forwardAxis.blockX
@@ -114,7 +116,7 @@ object EffectDrill : MineBlockEffect<DrillCompileData>("drill") {
                 block.z + stepZ * i
             )
 
-            if (compileData.blacklist.matches(toBreak)) {
+            if (blacklist.matches(toBreak)) {
                 continue
             }
 
@@ -141,7 +143,7 @@ object EffectDrill : MineBlockEffect<DrillCompileData>("drill") {
             blocks.add(toBreak)
         }
 
-        player.breakBlocksSafely(blocks, compileData.preventTriggers)
+        data.breakBlocksSafely(blocks, compileData.preventTriggers)
 
         return true
     }
@@ -149,7 +151,6 @@ object EffectDrill : MineBlockEffect<DrillCompileData>("drill") {
     override fun makeCompileData(config: Config, context: ViolationContext): DrillCompileData {
         return DrillCompileData(
             whitelist = config.getStringsOrNull("whitelist")?.map { Blocks.lookup(it) },
-            blacklist = config.getStrings("blacklisted_blocks").map { Blocks.lookup(it) },
             checkHardness = config.getBool("check_hardness"),
             disableOnSneak = config.getBool("disable_on_sneak"),
             preventTriggers = preventTriggerMode(config),
