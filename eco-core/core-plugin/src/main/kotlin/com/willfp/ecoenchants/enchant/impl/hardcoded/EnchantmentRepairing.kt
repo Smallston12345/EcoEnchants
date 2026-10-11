@@ -2,43 +2,54 @@ package com.willfp.ecoenchants.enchant.impl.hardcoded
 
 import com.willfp.eco.util.DurabilityUtils
 import com.willfp.ecoenchants.enchant.impl.HardcodedEcoEnchant
+import com.willfp.ecoenchants.runOwned
 import com.willfp.ecoenchants.target.EnchantFinder.getItemsWithEnchantActive
+import com.willfp.ecoenchants.target.EnchantFinder.hasEnchantActive
 import com.willfp.libreforge.slot.impl.SlotTypeArmor
 import com.willfp.libreforge.slot.impl.SlotTypeHands
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 
 object EnchantmentRepairing : HardcodedEcoEnchant(
     "repairing"
 ) {
     override fun onRegister() {
+        if (!plugin.isLoaded) {
+            return
+        }
+
         val frequency = config.getInt("frequency").toLong()
 
-        plugin.scheduler.runTimer(frequency, frequency) {
-            handleRepairing()
+        plugin.scheduler.global().runTimer(frequency, frequency) {
+            val notWhileHolding = config.getBool("not-while-holding")
+
+            for (player in Bukkit.getOnlinePlayers()) {
+                // Each player's inventory belongs to their own region on Folia.
+                player.runOwned {
+                    handleRepairing(player, notWhileHolding)
+                }
+            }
         }
     }
 
-    private fun handleRepairing() {
-        val notWhileHolding = config.getBool("not-while-holding")
+    private fun handleRepairing(player: Player, notWhileHolding: Boolean) {
+        if (!player.isOnline || !player.hasEnchantActive(this)) {
+            return
+        }
 
-        for (player in Bukkit.getOnlinePlayers()) {
-            val items = player.getItemsWithEnchantActive(this)
+        val repairPerLevel = config.getIntFromExpression("repair-per-level", player)
 
-            if (items.isEmpty()) {
-                continue
-            }
+        for ((item, level) in player.getItemsWithEnchantActive(this)) {
+            if (notWhileHolding) {
+                val isHolding = item in SlotTypeHands.getItems(player)
+                val isEquipped = item in SlotTypeArmor.getItems(player)
 
-            val repairPerLevel = config.getIntFromExpression("repair-per-level", player)
-            val heldItems = if (notWhileHolding) SlotTypeHands.getItems(player) else null
-            val equippedItems = if (notWhileHolding) SlotTypeArmor.getItems(player) else null
-
-            for ((item, level) in items) {
-                if (heldItems?.contains(item) == true || equippedItems?.contains(item) == true) {
+                if (isHolding || isEquipped) {
                     continue
                 }
-
-                DurabilityUtils.repairItem(item, level * repairPerLevel)
             }
+
+            DurabilityUtils.repairItem(item, level * repairPerLevel)
         }
     }
 }

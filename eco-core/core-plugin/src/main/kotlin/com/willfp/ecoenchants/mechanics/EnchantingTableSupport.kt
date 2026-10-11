@@ -21,6 +21,7 @@ import org.bukkit.event.enchantment.PrepareItemEnchantEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.inventory.meta.EnchantmentStorageMeta
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.min
@@ -62,7 +63,7 @@ object EnchantingTableSupport : Listener {
             EcoEnchants.getByID(enchantment.key.key) != null
         }
 
-        if (!plugin.configYml.getBool("enchanting-table.enabled")) {
+        if (!plugin.configYml.getBool("enchanting-table.enabled") || plugin.isDisabledIn(player.world)) {
             return
         }
 
@@ -170,7 +171,7 @@ object EnchantingTableSupport : Listener {
         // I remember writing this back in 8.x.x and deleting it during the recode
         // It's here because books don't work with this event, for some reason
         if (item.type == Material.ENCHANTED_BOOK) {
-            plugin.scheduler.run {
+            plugin.scheduler.on(player).run {
                 if (!event.isCancelled) {
                     val postEnchantItem = event.inventory.getItem(0)
                     val meta = postEnchantItem?.itemMeta as? EnchantmentStorageMeta
@@ -185,7 +186,7 @@ object EnchantingTableSupport : Listener {
 
     @EventHandler
     fun handleExtraItem(event: PrepareItemEnchantEvent) {
-        if (!plugin.configYml.getBool("enchanting-table.enabled")) {
+        if (!plugin.configYml.getBool("enchanting-table.enabled") || plugin.isDisabledIn(event.enchanter.world)) {
             return
         }
 
@@ -250,14 +251,15 @@ object EnchantingTableSupport : Listener {
 }
 
 object ExtraItemSupport {
-    internal val currentlyEnchantingExtraItem = mutableMapOf<UUID, Array<Int>>()
+    internal val currentlyEnchantingExtraItem = ConcurrentHashMap<UUID, Array<Int>>()
 
-    internal val extraEnchantableItems = mutableListOf<TestableItem>()
+    @Volatile
+    internal var extraEnchantableItems = emptyList<TestableItem>()
+        private set
 
     internal fun reload() {
-        extraEnchantableItems.clear()
-        extraEnchantableItems.addAll(plugin.targetsYml.getStrings("extra-enchantable-items").map {
+        extraEnchantableItems = plugin.targetsYml.getStrings("extra-enchantable-items").map {
             Items.lookup(it)
-        }.filterNot { it is EmptyTestableItem })
+        }.filterNot { it is EmptyTestableItem }
     }
 }

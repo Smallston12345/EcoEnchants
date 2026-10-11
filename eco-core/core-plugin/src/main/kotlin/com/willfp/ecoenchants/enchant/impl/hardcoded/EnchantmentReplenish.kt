@@ -29,6 +29,10 @@ object EnchantmentReplenish : HardcodedEcoEnchant(
     private var handler = ReplenishHandler(this)
 
     override fun onRegister() {
+        if (!plugin.isLoaded) {
+            return
+        }
+
         plugin.eventManager.registerListener(handler)
     }
 
@@ -98,7 +102,7 @@ object EnchantmentReplenish : HardcodedEcoEnchant(
 
             data.age = 0
 
-            plugin.scheduler.run {
+            plugin.scheduler.at(block.location).run {
                 block.type = type
                 block.blockData = data
 

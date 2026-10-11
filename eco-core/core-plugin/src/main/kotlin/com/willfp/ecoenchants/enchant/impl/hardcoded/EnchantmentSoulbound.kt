@@ -25,6 +25,10 @@ object EnchantmentSoulbound : HardcodedEcoEnchant(
     private val handler = SoulboundHandler(this)
 
     override fun onRegister() {
+        if (!plugin.isLoaded) {
+            return
+        }
+
         plugin.eventManager.registerListener(handler)
     }
 
@@ -114,7 +118,7 @@ object EnchantmentSoulbound : HardcodedEcoEnchant(
 
             val items = itemStrings.map { Items.fromSNBT(it) }
 
-            plugin.scheduler.run {
+            plugin.scheduler.on(player).run {
                 DropQueue(player)
                     .addItems(items)
                     .forceTelekinesis()

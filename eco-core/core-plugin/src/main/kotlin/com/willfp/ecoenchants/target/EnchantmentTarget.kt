@@ -36,17 +36,41 @@ class ConfiguredEnchantmentTarget(
     config: Config
 ) : EnchantmentTarget {
     override val id = config.getString("id")
-    override val displayName = config.getFormattedString("display-name")
 
-    override val slot = SlotTypes[config.getString("slot")] ?: throw IllegalArgumentException(
-        "Invalid slot type: ${config.getString("slot")}, options are ${
-            SlotTypes.values().map { it.id }
-        }"
-    )
+    @Volatile
+    private var state = load(config)
 
-    override val items = config.getStrings("items")
-        .map { Items.lookup(it) }
-        .filterNot { it is EmptyTestableItem }
+    override val displayName: String
+        get() = state.displayName
+
+    override val slot: SlotType
+        get() = state.slot
+
+    override val items: List<TestableItem>
+        get() = state.items
+
+    val invalidItems: List<String>
+        get() = state.invalidItems
+
+    fun reload(config: Config) {
+        state = load(config)
+    }
+
+    private fun load(config: Config): TargetState {
+        val lookups = config.getStrings("items")
+            .associateWith { Items.lookup(it) }
+
+        return TargetState(
+            config.getFormattedString("display-name"),
+            SlotTypes[config.getString("slot")] ?: throw IllegalArgumentException(
+                "Invalid slot type: ${config.getString("slot")}, options are ${
+                    SlotTypes.values().map { it.id }
+                }"
+            ),
+            lookups.values.filterNot { it is EmptyTestableItem },
+            lookups.filterValues { it is EmptyTestableItem }.keys.toList()
+        )
+    }
 
     override fun equals(other: Any?): Boolean {
         if (other !is EnchantmentTarget) {
@@ -59,12 +83,20 @@ class ConfiguredEnchantmentTarget(
     override fun hashCode(): Int {
         return Objects.hash(this.id)
     }
+
+    private class TargetState(
+        val displayName: String,
+        val slot: SlotType,
+        val items: List<TestableItem>,
+        val invalidItems: List<String>
+    )
 }
 
 internal object AllEnchantmentTarget : EnchantmentTarget {
     override val id = "all"
     override val displayName = plugin.langYml.getFormattedString("all")
     override val slot = SlotTypeAny
+    @Volatile
     override var items = emptyList<TestableItem>()
         private set
 

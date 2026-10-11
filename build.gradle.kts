@@ -21,12 +21,6 @@ base {
 
 dependencies {
     implementation(project(":eco-core:core-plugin"))
-    implementation(project(":eco-core:core-nms:v1_21_8", configuration = "reobf"))
-    implementation(project(":eco-core:core-nms:v1_21_10", configuration = "reobf"))
-    implementation(project(":eco-core:core-nms:v1_21_11", configuration = "reobf"))
-    implementation(project(":eco-core:core-nms:v26_1_1", configuration = "shadow"))
-    implementation(project(":eco-core:core-nms:v26_1_2", configuration = "shadow"))
-    implementation(project(":eco-core:core-nms:v26_2", configuration = "shadow"))
 }
 
 publishing {
@@ -95,18 +89,6 @@ allprojects {
     apply(plugin = "com.gradleup.shadow")
 
     repositories {
-        exclusiveContent {
-            forRepository {
-                flatDir {
-                    name = "patchedLibreforge"
-                    dirs(rootProject.layout.projectDirectory.dir("lib"))
-                }
-            }
-            filter {
-                includeModule("com.willfp", "libreforge")
-            }
-        }
-
         mavenLocal()
         mavenCentral()
 

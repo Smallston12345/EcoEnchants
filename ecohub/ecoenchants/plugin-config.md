@@ -14,6 +14,9 @@ A few options note that they require a **server restart** rather than a reload, 
 ## Default config.yml
 
 ```yaml
+# Worlds that EcoEnchants should be disabled in
+disabled-in-worlds: []
+
 # Options for enchanting items in the enchanting table
 enchanting-table:
   enabled: true # If custom enchantments should be available from enchanting tables
@@ -94,6 +97,14 @@ display:
     threshold: 5 # Above this amount, enchantment descriptions will not be shown
     word-wrap: 27 # Number of characters to have on each line
     format: "&8"
+
+  book-targets:
+    enabled: false # If enchanted books should show what each enchantment can be applied to
+    format: "&7Applies to: &e%targets%" # The line added under each enchantment on a book
+
+  book-drag-and-drop-price:
+    enabled: false # If enchanted books should show the drag and drop cost under each enchantment that allows it
+    format: "&7Drag and drop cost: &e%price%" # The line added under each enchantment on a book
 
   require-enchantable: true # If EcoEnchants should not display on non-enchantable items.
 

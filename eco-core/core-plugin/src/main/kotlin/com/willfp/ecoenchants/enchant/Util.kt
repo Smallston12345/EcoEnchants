@@ -1,20 +1,23 @@
 package com.willfp.ecoenchants.enchant
 
+import com.willfp.eco.core.enchant.customEnchantment
 import com.willfp.ecoenchants.enchant.impl.VanillaEcoEnchantLike
 import com.willfp.ecoenchants.plugin
 import org.bukkit.NamespacedKey
 import org.bukkit.enchantments.Enchantment
+import java.util.concurrent.ConcurrentHashMap
 
-private val ecoEnchantLikes = mutableMapOf<NamespacedKey, EcoEnchantLike>()
+internal val ecoEnchantLikes = ConcurrentHashMap<NamespacedKey, EcoEnchantLike>()
+
+val Enchantment.ecoEnchant: EcoEnchant?
+    get() = this.customEnchantment as? EcoEnchant
 
 fun Enchantment.wrap(): EcoEnchantLike {
-    if (this is EcoEnchant) {
-        return this
-    }
+    this.ecoEnchant?.let { return it }
 
     EcoEnchants.getByID(this.key.key)?.let { return it }
 
-    return ecoEnchantLikes.getOrPut(this.key) {
+    return ecoEnchantLikes.computeIfAbsent(this.key) {
         VanillaEcoEnchantLike(this, plugin)
     }
 }
