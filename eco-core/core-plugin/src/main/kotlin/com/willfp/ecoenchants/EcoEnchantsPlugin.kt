@@ -45,7 +45,7 @@ import com.willfp.libreforge.NamedValue
 import com.willfp.libreforge.effects.Effects
 import com.willfp.libreforge.loader.LibreforgePlugin
 import com.willfp.libreforge.loader.configs.ConfigCategory
-import com.willfp.libreforge.registerHolderProvider
+import com.willfp.libreforge.registerGenericHolderProvider
 import com.willfp.libreforge.registerHolderPlaceholderProvider
 import com.willfp.libreforge.registerSpecificRefreshFunction
 import org.bukkit.entity.LivingEntity
@@ -78,7 +78,7 @@ class EcoEnchantsPlugin : LibreforgePlugin() {
     override fun handleEnable() {
         Effects.register(EffectApplyRandomEnchant)
 
-        registerHolderProvider(EnchantHolderProvider)
+        registerGenericHolderProvider { EnchantHolderProvider.provide(it) }
 
         registerSpecificRefreshFunction<LivingEntity> {
             it.clearEnchantmentCache()
