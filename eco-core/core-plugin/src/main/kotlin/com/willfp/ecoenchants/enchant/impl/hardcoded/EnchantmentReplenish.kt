@@ -63,6 +63,12 @@ object EnchantmentReplenish : HardcodedEcoEnchant(
             }
 
             if (enchant.config.getBool("consume-seeds")) {
+                // Some ageable block data (for example FIRE) is not backed by
+                // an inventory item. Never pass those materials to ItemStack.
+                if (!type.isItem) {
+                    return
+                }
+
                 val item = ItemStack(
                     when (type) {
                         Material.WHEAT -> Material.WHEAT_SEEDS

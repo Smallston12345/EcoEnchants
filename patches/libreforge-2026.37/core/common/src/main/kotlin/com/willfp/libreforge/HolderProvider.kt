@@ -212,16 +212,18 @@ fun Dispatcher<*>.forceRefreshHolders() {
 }
 
 /**
- * Re-evaluate active effects against the current (possibly cached) holders.
+ * Re-evaluate active effects after rescanning the dispatcher's holders.
  *
- * Used by the periodic polling task: holders are presumed stable between events,
- * so we skip the provider rescan and only re-check conditions. The holder cache
- * still expires naturally (4 s TTL), so providers are still rescanned periodically.
- * Event-based callers (equipment change, inventory click, etc.) use [refreshHolders]
- * or [forceRefreshHolders] which explicitly invalidate the cache.
+ * Used by the periodic polling task so missed inventory events cannot leave an
+ * effect active until the holder cache expires. Event-based callers use
+ * [refreshHolders] or [forceRefreshHolders] for immediate updates.
  */
 internal fun Dispatcher<*>.pollEffects() {
     refreshFunctions.forEach { it(this) }
+    // Rescan holders on every poll (once per second per player). Reusing the 4 s holder
+    // cache here let enchantments keep working for several seconds after the item left
+    // its slot whenever the move didn't fire one of the refresh events.
+    holderCache.put(this.uuid, this.computeHolders())
     this.updateEffects()
 }
 

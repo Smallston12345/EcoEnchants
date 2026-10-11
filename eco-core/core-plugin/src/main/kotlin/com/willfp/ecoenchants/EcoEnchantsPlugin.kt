@@ -33,6 +33,7 @@ import com.willfp.ecoenchants.mechanics.EcoEnchantsAnvilHandler
 import com.willfp.ecoenchants.mechanics.EnchantingTableSupport
 import com.willfp.ecoenchants.mechanics.ExtraItemSupport
 import com.willfp.ecoenchants.mechanics.GrindstoneSupport
+import com.willfp.ecoenchants.mechanics.HolderRefreshFixes
 import com.willfp.ecoenchants.mechanics.LootSupport
 import com.willfp.ecoenchants.mechanics.VillagerSupport
 import com.willfp.ecoenchants.rarity.EnchantmentRarities
@@ -136,7 +137,8 @@ class EcoEnchantsPlugin : LibreforgePlugin() {
             EnchantingTableSupport,
             LootSupport,
             LoreConversion,
-            GrindstoneSupport
+            GrindstoneSupport,
+            HolderRefreshFixes
         )
     }
 

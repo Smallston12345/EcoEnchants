@@ -4,6 +4,7 @@ import com.willfp.eco.core.registry.KRegistrable
 import com.willfp.libreforge.Dispatcher
 import com.willfp.libreforge.ProvidedEffectBlock
 import com.willfp.libreforge.ProvidedHolder
+import com.willfp.libreforge.forceRefreshHolders
 import com.willfp.libreforge.counters.bind.BoundCounters
 import com.willfp.libreforge.counters.bind.BoundCounters.bindings
 import com.willfp.libreforge.generatePlaceholders
@@ -13,6 +14,7 @@ import com.willfp.libreforge.providedActiveEffectsFor
 import com.willfp.libreforge.triggers.event.TriggerDispatchEvent
 import com.willfp.libreforge.triggers.impl.TriggerAltClick
 import org.bukkit.Bukkit
+import org.bukkit.entity.Player
 import org.bukkit.event.Cancellable
 import org.bukkit.event.Listener
 
@@ -91,6 +93,14 @@ abstract class Trigger(
         allowDuplicates: Boolean = false
     ) {
         val effectsArePreFiltered = forceHolders == null
+
+        // alt_click is a deliberate, low-frequency action. Rescan the player's items first so an
+        // enchanted item that was just moved out of the main hand (into the inventory, off hand,
+        // etc.) can never fire from stale cached holders.
+        if (forceHolders == null && this is TriggerAltClick && dispatcher.dispatcher is Player) {
+            dispatcher.forceRefreshHolders()
+        }
+
         val effects = forceHolders?.getProvidedActiveEffects(dispatcher)
             ?: dispatcher.providedActiveEffectsFor(this)
 

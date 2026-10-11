@@ -27,4 +27,20 @@ The patch:
   redispatching the full libreforge `mine_block` chain;
 - caps one activation at 64 additional blocks unless `max_blocks` is supplied;
 - skips the redundant antigrief lookup before rejecting protected recursive
-  `mine_block` dispatches.
+  `mine_block` dispatches;
+- fixes `item_magnet` flinging items: it no longer attracts player-thrown items
+  (Q drops), waits for the pickup delay, damps and caps item velocity instead of
+  adding to it every tick, and stops pulling inside pickup range.
+- `pollEffects` rescans holders on every player poll again instead of reusing the
+  4 s holder cache, so items moved out of their slot stop working within 1 s.
+- `alt_click` force-refreshes the player's holders before dispatching, so right-click
+  enchantments never fire from an item that has left its slot.
+
+## Deployment
+
+The built EcoEnchants plugin JAR contains the patched libreforge JAR as a nested
+file. Its loader uses that copy when no standalone libreforge plugin is already
+loaded. If the server has a separate libreforge JAR in `plugins/`, replace it with
+`lib/libreforge-2026.37-shadow.jar` and remove the old copy. The loader keeps an
+already-loaded standalone libreforge plugin, so leaving an older JAR there would
+prevent these fixes from taking effect.
