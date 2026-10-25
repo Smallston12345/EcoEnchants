@@ -106,6 +106,9 @@ display:
     enabled: false # If enchanted books should show the drag and drop cost under each enchantment that allows it
     format: "&7Drag and drop cost: &e%price%" # The line added under each enchantment on a book
 
+  book-item:
+    priority: type # If both the type and the rarity set book-item, which one is used: type or rarity
+
   require-enchantable: true # If EcoEnchants should not display on non-enchantable items.
 
 # Options for the /enchantinfo GUI
@@ -121,6 +124,7 @@ enchantinfo:
   item:
     row: 2
     column: 5
+    locations: [ ] # Optional list of row/column slots; if set, the button shows in each of them instead of row/column
     show-max-level: true # Whether the book should be the max level or level 1
     lore: # The description is automatically appended
       - ""
@@ -171,6 +175,7 @@ enchant-gui:
       - "&farea below!"
     row: 1
     column: 9
+    locations: [ ] # Optional list of row/column slots; if set, the button shows in each of them instead of row/column
 
   item-row: 1 # The row for the slot to drop in the item
   item-column: 5 # The column
@@ -181,10 +186,12 @@ enchant-gui:
       item: arrow name:"&fNext Page" # The item. Will not show if on the last page.
       row: 6
       column: 6
+      locations: [ ] # Optional list of row/column slots; if set, the button shows in each of them instead of row/column
     backwards:
       item: arrow name:"&fPrevious Page" # The item. Will not show if on the first page.
       row: 6
       column: 4
+      locations: [ ] # Optional list of row/column slots; if set, the button shows in each of them instead of row/column
 
   # Optional close button for the enchant GUI
   close-button:
@@ -194,6 +201,7 @@ enchant-gui:
     lore: [ ]
     row: 6
     column: 5
+    locations: [ ] # Optional list of row/column slots; if set, the button shows in each of them instead of row/column
 
   # Options for the area where the enchantments are shown
   enchant-area:
@@ -221,6 +229,7 @@ enchant-gui:
     lore: []
     row: 6
     column: 1
+    locations: [ ] # Optional list of row/column slots; if set, the button shows in each of them instead of row/column
 
 # Options for the group selection GUI (only used when enchant-gui.grouped is true)
 group-gui:

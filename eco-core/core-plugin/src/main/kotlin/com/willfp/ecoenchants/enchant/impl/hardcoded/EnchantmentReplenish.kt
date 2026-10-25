@@ -66,6 +66,12 @@ object EnchantmentReplenish : HardcodedEcoEnchant(
                 return
             }
 
+            val fullyGrown = data.age == data.maximumAge
+
+            if (!fullyGrown && enchant.config.getBool("only-fully-grown")) {
+                return
+            }
+
             if (enchant.config.getBool("consume-seeds")) {
                 // Some ageable block data (for example FIRE) is not backed by
                 // an inventory item. Never pass those materials to ItemStack.
@@ -91,11 +97,7 @@ object EnchantmentReplenish : HardcodedEcoEnchant(
                 }
             }
 
-            if (data.age != data.maximumAge) {
-                if (enchant.config.getBool("only-fully-grown")) {
-                    return
-                }
-
+            if (!fullyGrown) {
                 event.isDropItems = false
                 event.expToDrop = 0
             }
